@@ -32,6 +32,7 @@ func Login(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
 	}
+
 	userRepository := repositories.NewUserRepository()
 	err = userRepository.Login(&user)
 	if err != nil {
@@ -39,11 +40,18 @@ func Login(c *fiber.Ctx) error {
 	}
 	loginResponse := models.LoginResponse{Email: user.Email, Token: user.Token}
 
-	return c.Status(201).JSON(fiber.Map{"status": "success", "message": "Successfully login", "data": loginResponse})
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Successfully login", "data": loginResponse})
 }
 
 func Logout(c *fiber.Ctx) error {
-	return nil
+	authToken := c.Get("Authorization")
+	userRepository := repositories.NewUserRepository()
+
+	err := userRepository.Logout(&authToken)
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"status": "error", "message": err.Error()})
+	}
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Successfully logout"})
 }
 
 func Delete(c *fiber.Ctx) error {
