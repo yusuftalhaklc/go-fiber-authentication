@@ -1,1 +1,16 @@
 package router
+
+import (
+	"github.com/gofiber/fiber/v2"
+	"github.com/yusuftalhaklc/go-fiber-authentication/app/controllers"
+)
+
+func SetupRoutes(app *fiber.App) {
+	api := app.Group("/api")
+	v1 := api.Group("/user")
+
+	v1.Post("/signup", controllers.Signup)
+	v1.Post("/login", controllers.Login)
+	v1.Get("/user", controllers.GetUser)
+	v1.Post("/logout", controllers.Logout)
+}
