@@ -25,7 +25,7 @@ Go Fiber Authentication API is a RESTful API built using the Fiber web framework
 **It is currently running on localhost port 8080.** [Postman Collection](https://red-shuttle-655108.postman.co/workspace/go-fiber-auth~1c48d0cc-5e90-4496-b2f0-c292446f90cf/collection/27159195-7a2c468b-a60e-4013-a4ee-0bd89310b1c7?action=share&creator=27159195)
 
 ## API Endpoints
-### Get All Users
+### Signup
 
 - **Endpoint:** `/api/signup`
 - **Method:** `POST`
@@ -102,10 +102,10 @@ Go Fiber Authentication API is a RESTful API built using the Fiber web framework
 ```
 
 ### Logout
-- Request
+- Request <br>
+Authorization = token
 ```http
-    GET api/user/logout
-    Authorization = token
+GET /api/user/Logout
 ```
 
 - Response
