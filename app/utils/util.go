@@ -68,3 +68,30 @@ func VerifyToken(tokenString string) (*jwt.Token, error) {
 	}
 	return token, nil
 }
+
+func InvalidateToken(tokenString string) (string, error) {
+	// Token doğrula
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		return privateKey.PublicKey, nil
+	})
+	if err != nil {
+		return "", err
+	}
+
+	// Token geçersizleştir
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return "", errors.New("Invalid token claims")
+	}
+
+	claims["exp"] = time.Now().Unix() // Geçerlilik süresini şu anın tarihine ayarla
+
+	// Geçersizleştirilmiş tokenı döndür
+	newToken := jwt.NewWithClaims(token.Method, claims)
+	invalidatedTokenString, err := newToken.SigningString()
+	if err != nil {
+		return "", err
+	}
+
+	return invalidatedTokenString, nil
+}
