@@ -96,3 +96,30 @@ func (r *UserRepositoryImpl) Login(user *models.User) error {
 
 	return nil
 }
+func (r *UserRepositoryImpl) Logout(token *string) error {
+	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	var foundUser *models.User
+
+	err := r.collection.FindOne(ctx, bson.M{"token": *token}).Decode(&foundUser)
+	defer cancel()
+	if err != nil {
+		return errors.New("invalid token")
+	}
+	newToken, _ := utils.InvalidateToken(*token)
+
+	filter := bson.M{"email": *foundUser.Email}
+
+	var updateObj primitive.D
+	*&foundUser.Logout_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+
+	updateObj = append(updateObj, bson.E{Key: "logout_at", Value: *&foundUser.Logout_at})
+	updateObj = append(updateObj, bson.E{Key: "token", Value: newToken})
+
+	_, insertErr := r.collection.UpdateOne(ctx, filter, bson.D{{Key: "$set", Value: updateObj}})
+	if insertErr != nil {
+		return errors.New("cannot logout")
+	}
+	defer cancel()
+
+	return nil
+}
