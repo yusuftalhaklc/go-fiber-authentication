@@ -36,7 +36,7 @@ func Login(c *fiber.Ctx) error {
 	userRepository := repositories.NewUserRepository()
 	err = userRepository.Login(&user)
 	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"status": "error", "message": err.Error()})
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
 	}
 	loginResponse := models.LoginResponse{Email: user.Email, Token: user.Token}
 
@@ -49,11 +49,19 @@ func Logout(c *fiber.Ctx) error {
 
 	err := userRepository.Logout(&authToken)
 	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"status": "error", "message": err.Error()})
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
 	}
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Successfully logout"})
 }
 
 func Delete(c *fiber.Ctx) error {
-	return nil
+	authToken := c.Get("Authorization")
+	userRepository := repositories.NewUserRepository()
+
+	err := userRepository.Delete(&authToken)
+	if err != nil {
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
+	}
+
+	return c.Status(http.StatusOK).JSON(fiber.Map{"status": "success", "message": "Successfully deleted"})
 }
