@@ -56,10 +56,10 @@ Go Fiber Authentication API is a RESTful API built using the Fiber web framework
 - Request Body
 ```json
 {
-    "first_name":"Yusuf Talha",
-    "last_name":"Kılıç",
-    "password":"pass123",
-    "email":"yusuftalhaklc@gmeil.com",
+    "first_name":"User First Name",
+    "last_name":"User Last Name",
+    "password":"password",
+    "email":"username@example.com",
     "phone":"5555555555"
 }
 ```
