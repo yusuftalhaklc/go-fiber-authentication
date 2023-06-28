@@ -26,3 +26,15 @@ type LoginResponse struct {
 	Email *string `json:"email"`
 	Token *string `json:"token"`
 }
+
+type GetResponse struct {
+	First_name    *string   `json:"first_name"`
+	Last_name     *string   `json:"last_name"`
+	Password      *string   `json:"password"`
+	Email         *string   `json:"email"`
+	Phone         *string   `json:"phone"`
+	Avatar        *string   `json:"avatar"`
+	Created_at    time.Time `json:"created_at"`
+	Last_login_at time.Time `json:"last_login_at"`
+	Logout_at     time.Time `json:"logout_at"`
+}
