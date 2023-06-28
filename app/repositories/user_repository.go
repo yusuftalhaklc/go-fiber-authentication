@@ -160,3 +160,25 @@ func (r *UserRepositoryImpl) Delete(token *string) error {
 
 	return nil
 }
+
+func (r *UserRepositoryImpl) GetUser(token *string) (*models.GetResponse, error) {
+	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	var foundUser *models.User
+	var responseUser *models.GetResponse
+
+	err := r.collection.FindOne(ctx, bson.M{"token": *token}).Decode(&foundUser)
+	defer cancel()
+	if err != nil {
+		return responseUser, errors.New("invalid credentials")
+	}
+
+	filter := bson.M{"token": *foundUser.Token}
+
+	insertErr := r.collection.FindOne(ctx, filter).Decode(&responseUser)
+	if insertErr != nil {
+		return responseUser, errors.New("something went wrong")
+	}
+	defer cancel()
+
+	return responseUser, nil
+}
