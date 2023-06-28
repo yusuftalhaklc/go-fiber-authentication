@@ -44,7 +44,7 @@ Go Fiber Authentication API is a RESTful API built using the Fiber web framework
 - **Method:** `POST`
 - **Description:** Logout.
 
-### Logout 
+### Get User
 
 - **Endpoint:** `/api/user/`
 - **Method:** `GET`
