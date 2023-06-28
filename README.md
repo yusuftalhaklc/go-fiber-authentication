@@ -41,8 +41,14 @@ Go Fiber Authentication API is a RESTful API built using the Fiber web framework
 ### Logout 
 
 - **Endpoint:** `/api/user/logout`
-- **Method:** `GET`
+- **Method:** `POST`
 - **Description:** Logout.
+
+### Logout 
+
+- **Endpoint:** `/api/user/`
+- **Method:** `GET`
+- **Description:** Get user details.
 
 ## Request Body and Response Examples
 
@@ -61,16 +67,16 @@ Go Fiber Authentication API is a RESTful API built using the Fiber web framework
 ```json
 {
     "data": {
-        "ID": "649ae0cf306d78d5c350e496",
-        "user_id": "649ae0cf306d78d5c350e496",
-        "first_name": "Yusuf Talha",
-        "last_name": "Kılıç",
-        "password": "9b8769a4a742959a2d0298c36fb70623f2dfacda8436237df08d8dfd5b37374c",
-        "email": "yusuftalhaklc@gmeil.com",
+        "ID": "649c8813a9299b295118e33c",
+        "user_id": "649c8813a9299b295118e33c",
+        "first_name": "User First Name",
+        "last_name": "User Last Name",
+        "password": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
+        "email": "username@example.com",
         "phone": "5555555555",
         "avatar": null,
-        "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODc4NzM0OTUsImlkIjoiNjQ5YWUwY2YzMDZkNzhkNWMzNTBlNDk2IiwibWFpbCI6Inl1c3VmdGFsaGFrbGNAZ21laWwuY29tIn0.zAMeCix0W2OX3bjl2owU9MTShdzRTbX19eDcdktCJpPaVCjTbdMFqgVC5qoNuoYkIkS5OXomGflCS19d4otmew",
-        "created_at": "2023-06-27T16:14:55+03:00",
+        "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODc5ODE4NTEsImlkIjoiNjQ5Yzg4MTNhOTI5OWIyOTUxMThlMzNjIiwibWFpbCI6InVzZXJuYW1lQGV4YW1wbGUuY29tIn0._WnQuFPkJBr3s49EpU8BJo6ndVizOmz1OM5hp9uzh2Jz-NhOvcEByZK9EYJKoNRNBoJN2uKtPn1MyIdB-Nus-w",
+        "created_at": "2023-06-28T22:20:51+03:00",
         "last_login_at": "0001-01-01T00:00:00Z",
         "logout_at": "0001-01-01T00:00:00Z",
         "deleted_at": "0001-01-01T00:00:00Z"
@@ -84,8 +90,8 @@ Go Fiber Authentication API is a RESTful API built using the Fiber web framework
 - Request
 ```json
 {
-    "email":"yusuftalhaklc@gmeil.com",
-    "password":"pass123"
+    "email": "username@example.com",
+    "password": "password"
 }
 ```
 
@@ -93,8 +99,8 @@ Go Fiber Authentication API is a RESTful API built using the Fiber web framework
 ```json
 {
     "data": {
-        "email": "yusuftalhaklc@gmeil.com",
-        "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODc4NzM1NTIsImlkIjoiMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIiwibWFpbCI6Inl1c3VmdGFsaGFrbGNAZ21laWwuY29tIn0.u60QhRQeiOvAEnVGtu0RPRbNGFPM41QBdPZbqqcntymbz096AwAO8jIEYiGQDZX-FPu2Kx9F2iamcsVbuI2Jww"
+        "email": "username@example.com",
+        "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODc5ODIwOTEsImlkIjoiMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwIiwibWFpbCI6InVzZXJuYW1lQGV4YW1wbGUuY29tIn0.QY9WFwJdTi4tod8S8bnh3gRGt6SzwVsf3RXOzRwQlHhPsfkOv9KiK4l3BX9FpBu_kM1aSWzkEO7Mx5Y_vxEH3A"
     },
     "message": "Successfully login",
     "status": "success"
@@ -105,13 +111,39 @@ Go Fiber Authentication API is a RESTful API built using the Fiber web framework
 - Request <br>
 Authorization = token
 ```http
-GET /api/user/Logout
+POST /api/user/Logout
 ```
 
 - Response
 ```json
 {
     "message": "Successfully logout",
+    "status": "success"
+}
+```
+
+### Get user
+- Request <br>
+Authorization = token
+```http
+GET /api/user/
+```
+
+- Response
+```json
+{
+    "data": {
+        "first_name": "User First Name",
+        "last_name": "User Last Name",
+        "password": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
+        "email": "username@example.com",
+        "phone": "5555555555",
+        "avatar": null,
+        "created_at": "2023-06-28T19:20:51Z",
+        "last_login_at": "2023-06-28T19:38:27Z",
+        "logout_at": "2023-06-28T19:38:19Z"
+    },
+    "message": "Successfully found",
     "status": "success"
 }
 ```
