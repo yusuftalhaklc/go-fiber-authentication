@@ -73,6 +73,9 @@ func (r *UserRepositoryImpl) Login(user *models.User) error {
 	if !(utils.VerifyPassword(*user.Password, *foundUser.Password)) {
 		return errors.New("email or password incorrect")
 	}
+	if !foundUser.Deleted_at.Equal(time.Time{}) {
+		return errors.New("User not found")
+	}
 
 	token, err := utils.CreateToken(user)
 	if err != nil {
@@ -103,8 +106,12 @@ func (r *UserRepositoryImpl) Logout(token *string) error {
 	err := r.collection.FindOne(ctx, bson.M{"token": *token}).Decode(&foundUser)
 	defer cancel()
 	if err != nil {
-		return errors.New("invalid token")
+		return errors.New("invalid credentials")
 	}
+	if !foundUser.Deleted_at.Equal(time.Time{}) {
+		return errors.New("User not found")
+	}
+
 	newToken, _ := utils.InvalidateToken(*token)
 
 	filter := bson.M{"email": *foundUser.Email}
@@ -114,6 +121,36 @@ func (r *UserRepositoryImpl) Logout(token *string) error {
 
 	updateObj = append(updateObj, bson.E{Key: "logout_at", Value: *&foundUser.Logout_at})
 	updateObj = append(updateObj, bson.E{Key: "token", Value: newToken})
+
+	_, insertErr := r.collection.UpdateOne(ctx, filter, bson.D{{Key: "$set", Value: updateObj}})
+	if insertErr != nil {
+		return errors.New("cannot logout")
+	}
+	defer cancel()
+
+	return nil
+}
+
+func (r *UserRepositoryImpl) Delete(token *string) error {
+	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	var foundUser *models.User
+
+	err := r.collection.FindOne(ctx, bson.M{"token": *token}).Decode(&foundUser)
+	defer cancel()
+	if err != nil {
+		return errors.New("invalid credentials")
+	}
+
+	filter := bson.M{"email": *foundUser.Email}
+
+	if !foundUser.Deleted_at.Equal(time.Time{}) {
+		return errors.New("user already deleted")
+	}
+
+	var updateObj primitive.D
+	*&foundUser.Deleted_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+
+	updateObj = append(updateObj, bson.E{Key: "deleted_at", Value: *&foundUser.Deleted_at})
 
 	_, insertErr := r.collection.UpdateOne(ctx, filter, bson.D{{Key: "$set", Value: updateObj}})
 	if insertErr != nil {
