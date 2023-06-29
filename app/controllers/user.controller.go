@@ -20,3 +20,21 @@ func GetUser(c *fiber.Ctx) error {
 
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Successfully found", "data": foundUser})
 }
+
+func Update(c *fiber.Ctx) error {
+	authToken := c.Get("Authorization")
+	var user models.User
+
+	err := c.BodyParser(&user)
+	if err != nil {
+		return c.Status(http.StatusBadRequest).JSON(fiber.Map{"status": "error", "message": "Something's wrong with your input", "data": err})
+	}
+
+	userRepository := repositories.NewUserRepository()
+	err = userRepository.Update(&user, &authToken)
+	if err != nil {
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
+	}
+
+	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Successfully updated"})
+}
