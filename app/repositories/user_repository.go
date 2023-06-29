@@ -152,9 +152,9 @@ func (r *UserRepositoryImpl) Delete(token *string) error {
 
 	updateObj = append(updateObj, bson.E{Key: "deleted_at", Value: *&foundUser.Deleted_at})
 
-	_, insertErr := r.collection.UpdateOne(ctx, filter, bson.D{{Key: "$set", Value: updateObj}})
-	if insertErr != nil {
-		return errors.New("cannot logout")
+	_, deleteErr := r.collection.UpdateOne(ctx, filter, bson.D{{Key: "$set", Value: updateObj}})
+	if deleteErr != nil {
+		return errors.New("cannot deleted")
 	}
 	defer cancel()
 
@@ -181,4 +181,52 @@ func (r *UserRepositoryImpl) GetUser(token *string) (*models.GetResponse, error)
 	defer cancel()
 
 	return responseUser, nil
+}
+
+func (r *UserRepositoryImpl) Update(user *models.User, token *string) error {
+	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
+	var foundUser *models.User
+
+	err := r.collection.FindOne(ctx, bson.M{"token": *token}).Decode(&foundUser)
+	defer cancel()
+	if err != nil {
+		return errors.New("invalid credentials")
+	}
+
+	filter := bson.M{"token": *foundUser.Token}
+	var updateObj primitive.D
+
+	if user.First_name != nil {
+		updateObj = append(updateObj, bson.E{Key: "first_name", Value: *user.First_name})
+	}
+	if user.Last_name != nil {
+		updateObj = append(updateObj, bson.E{Key: "last_name", Value: *user.Last_name})
+	}
+	if user.Password != nil {
+		*user.Password = utils.HashPassword(*user.Password)
+		updateObj = append(updateObj, bson.E{Key: "password", Value: *user.Password})
+	}
+	if user.Email != nil {
+		err := r.collection.FindOne(ctx, bson.M{"email": *user.Email}).Decode(&foundUser)
+		if err == nil {
+			return errors.New("email already taken")
+		} else {
+			updateObj = append(updateObj, bson.E{Key: "email", Value: *user.Email})
+		}
+
+	}
+	if user.Phone != nil {
+		updateObj = append(updateObj, bson.E{Key: "phone", Value: *user.Phone})
+	}
+	if user.Avatar != nil {
+		updateObj = append(updateObj, bson.E{Key: "avatar", Value: *user.Avatar})
+	}
+
+	_, updateErr := r.collection.UpdateOne(ctx, filter, bson.D{{Key: "$set", Value: updateObj}})
+	if updateErr != nil {
+		return errors.New("cannot updated")
+	}
+	defer cancel()
+	user = foundUser
+	return nil
 }
