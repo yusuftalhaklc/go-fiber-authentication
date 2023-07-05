@@ -7,7 +7,7 @@ import (
 	"github.com/yusuftalhaklc/go-fiber-authentication/app/utils"
 )
 
-func AuthMiddleware() fiber.Handler {
+func TokenMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		tokenString := c.Cookies("access_token")
 		_, err := utils.VerifyToken(tokenString)
