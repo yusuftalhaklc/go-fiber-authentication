@@ -10,13 +10,14 @@ func SetupRoutes(app *fiber.App) {
 	api := app.Group("/api")
 	v1 := api.Group("/user")
 
-	middleware := middlewares.AuthMiddleware()
+	tokenMiddleware := middlewares.TokenMiddleware()
+	adminMiddleware := middlewares.AdminMiddleware()
 
 	v1.Post("/signup", handlers.Signup)
 	v1.Post("/login", handlers.Login)
 
-	v1.Put("/update", middleware, handlers.Update)
-	v1.Get("/", middleware, handlers.GetUser)
-	v1.Post("/logout", middleware, handlers.Logout)
-	v1.Post("/delete", middleware, handlers.Delete)
+	v1.Put("/update", tokenMiddleware, handlers.Update)
+	v1.Get("/", tokenMiddleware, handlers.GetUser)
+	v1.Post("/logout", tokenMiddleware, handlers.Logout)
+	v1.Delete("/delete/:email", tokenMiddleware, adminMiddleware, handlers.Delete)
 }
