@@ -18,6 +18,7 @@ type UserRepositoryImpl struct {
 	collection *mongo.Collection
 }
 
+// NewUserRepository creates a new instance of UserRepositoryImpl.
 func NewUserRepository() *UserRepositoryImpl {
 	database.Connect()
 	DB := database.Db
@@ -28,17 +29,19 @@ func NewUserRepository() *UserRepositoryImpl {
 		collection: collection,
 	}
 }
+
+// Create inserts a new user into the database.
 func (r *UserRepositoryImpl) Create(user *models.User) (*models.User, error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 
 	count, err := r.collection.CountDocuments(ctx, bson.M{"email": user.Email})
 	defer cancel()
 	if err != nil {
-		return nil, errors.New("error occured while checking for the email")
+		return nil, errors.New("error occurred while checking for the email")
 	}
 
 	if count > 0 {
-		return nil, errors.New("this email already exsits")
+		return nil, errors.New("this email already exists")
 	}
 
 	if models.IsRoleValid(user.UserRole) == false {
@@ -60,6 +63,7 @@ func (r *UserRepositoryImpl) Create(user *models.User) (*models.User, error) {
 	return user, nil
 }
 
+// Login finds a user in the database by email and verifies the password for login.
 func (r *UserRepositoryImpl) Login(user *models.User) (*models.User, error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	var foundUser models.User
@@ -90,6 +94,8 @@ func (r *UserRepositoryImpl) Login(user *models.User) (*models.User, error) {
 
 	return user, nil
 }
+
+// Logout updates the logout_at field of a user in the database.
 func (r *UserRepositoryImpl) Logout(email string) error {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	var foundUser *models.User
@@ -119,6 +125,7 @@ func (r *UserRepositoryImpl) Logout(email string) error {
 	return nil
 }
 
+// Delete marks a user as deleted by setting the deleted_at field in the database.
 func (r *UserRepositoryImpl) Delete(email string) error {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	var foundUser *models.User
@@ -149,6 +156,7 @@ func (r *UserRepositoryImpl) Delete(email string) error {
 	return nil
 }
 
+// GetUser retrieves a user from the database by email.
 func (r *UserRepositoryImpl) GetUser(email string) (*models.GetResponse, error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	var responseUser *models.GetResponse
@@ -162,6 +170,7 @@ func (r *UserRepositoryImpl) GetUser(email string) (*models.GetResponse, error) 
 	return responseUser, nil
 }
 
+// Update updates the user information in the database.
 func (r *UserRepositoryImpl) Update(user *models.User) error {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	var foundUser *models.User
@@ -192,7 +201,6 @@ func (r *UserRepositoryImpl) Update(user *models.User) error {
 		} else {
 			updateObj = append(updateObj, bson.E{Key: "email", Value: *user.Email})
 		}
-
 	}
 	if user.Phone != nil {
 		updateObj = append(updateObj, bson.E{Key: "phone", Value: *user.Phone})

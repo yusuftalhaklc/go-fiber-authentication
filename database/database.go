@@ -13,6 +13,7 @@ import (
 
 var Db *mongo.Database
 
+// Connect establishes a connection to the MongoDB database.
 func Connect() {
 	connectionString := config.Config("DB_URI")
 

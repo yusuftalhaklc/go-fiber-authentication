@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// User represents a user entity.
 type User struct {
 	ID            primitive.ObjectID `bson:"_id"`
 	User_id       string             `json:"user_id"`
@@ -22,11 +23,13 @@ type User struct {
 	Deleted_at    time.Time          `json:"deleted_at"`
 }
 
+// Role represents a user role.
 type Role struct {
 	RoleDesc string `json:"role_desc"`
 	RoleId   int    `json:"role_id"`
 }
 
+// roles is a predefined list of valid roles.
 var roles = []Role{
 	{
 		RoleDesc: "admin",
@@ -38,6 +41,7 @@ var roles = []Role{
 	},
 }
 
+// IsRoleValid checks if the provided role is a valid role.
 func IsRoleValid(role Role) bool {
 	for _, value := range roles {
 		if value.RoleDesc == role.RoleDesc && value.RoleId == role.RoleId {
@@ -46,6 +50,8 @@ func IsRoleValid(role Role) bool {
 	}
 	return false
 }
+
+// IsAdminValid checks if the provided role is an admin role.
 func IsAdminValid(role Role) bool {
 	adminDetails := roles[0]
 	if role.RoleDesc == adminDetails.RoleDesc && role.RoleId == adminDetails.RoleId {
@@ -54,11 +60,13 @@ func IsAdminValid(role Role) bool {
 	return false
 }
 
+// LoginResponse represents the response returned after successful login.
 type LoginResponse struct {
 	Email *string `json:"email"`
 	Token string  `json:"token"`
 }
 
+// GetResponse represents the response returned when getting user data.
 type GetResponse struct {
 	First_name    *string   `json:"first_name"`
 	Last_name     *string   `json:"last_name"`
