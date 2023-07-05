@@ -5,7 +5,9 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/encryptcookie"
 	"github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/yusuftalhaklc/go-fiber-authentication/app/config"
 	"github.com/yusuftalhaklc/go-fiber-authentication/app/router"
 )
 
@@ -14,6 +16,10 @@ func main() {
 
 	app.Use(logger.New())
 	app.Use(cors.New())
+
+	app.Use(encryptcookie.New(encryptcookie.Config{
+		Key: config.Config("COOKIE_ENC_KEY"),
+	}))
 
 	router.SetupRoutes(app)
 
