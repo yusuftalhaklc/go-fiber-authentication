@@ -1,15 +1,13 @@
 package utils
 
 import (
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
 	"crypto/sha256"
 	"errors"
 	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/yusuftalhaklc/go-fiber-authentication/app/config"
 	"github.com/yusuftalhaklc/go-fiber-authentication/app/models"
 )
 
@@ -28,51 +26,55 @@ func VerifyPassword(password, hashedPassword string) bool {
 	return false
 }
 
-var privateKey *ecdsa.PrivateKey
-
-func init() {
-	var err error
-	privateKey, err = ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
-	if err != nil {
-		panic(err)
-	}
-}
+var secretKey = []byte(config.Config("SECRET_KEY"))
 
 func CreateToken(user *models.User) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodES256, jwt.MapClaims{
-		"id":   user.ID,
-		"mail": user.Email,
-		"exp":  time.Now().Add(time.Minute * 30).Unix(),
-	})
+	token := jwt.New(jwt.SigningMethodHS256)
 
-	// ECDSA ile imzala
-	signedToken, err := token.SignedString(privateKey)
+	claims := token.Claims.(jwt.MapClaims)
+	claims["id"] = user.ID
+	claims["email"] = user.Email
+	claims["exp"] = time.Now().Add(time.Minute * 10).Unix()
+
+	tokenString, err := token.SignedString(secretKey)
 	if err != nil {
-		return "", err
+		fmt.Println("Token oluşturulamadı:", err)
 	}
 
-	return signedToken, nil
+	return tokenString, nil
 }
 
-func VerifyToken(tokenString string) (*jwt.Token, error) {
-	// Token doğrula
+func VerifyToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return &privateKey.PublicKey, nil
+		return []byte(config.Config("SECRET_KEY")), nil
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Invalid token")
 	}
-	// Token geçerlilik süresini kontrol et
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return nil, errors.New("claims error")
+	}
+
+	expirationTime := time.Unix(int64(claims["exp"].(float64)), 0)
+	currentTime := time.Now()
+
+	fmt.Println("exp : ", expirationTime, "\n", "current : ", currentTime)
+
+	if currentTime.After(expirationTime) {
+		return nil, errors.New("Invalid token")
+	}
 	if !token.Valid {
-		return nil, errors.New("Token is expired")
+		return nil, errors.New("Invalid token")
 	}
-	return token, nil
+	return claims, nil
 }
 
 func InvalidateToken(tokenString string) (string, error) {
 	// Token doğrula
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return privateKey.PublicKey, nil
+		return secretKey, nil
 	})
 	if err != nil {
 		return "", err
