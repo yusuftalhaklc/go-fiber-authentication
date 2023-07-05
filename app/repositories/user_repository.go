@@ -28,17 +28,17 @@ func NewUserRepository() *UserRepositoryImpl {
 		collection: collection,
 	}
 }
-func (r *UserRepositoryImpl) Create(user *models.User) error {
+func (r *UserRepositoryImpl) Create(user *models.User) (*models.User, error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 
 	count, err := r.collection.CountDocuments(ctx, bson.M{"email": user.Email})
 	defer cancel()
 	if err != nil {
-		return errors.New("error occured while checking for the email")
+		return nil, errors.New("error occured while checking for the email")
 	}
 
 	if count > 0 {
-		return errors.New("this email or phone number already exsits")
+		return nil, errors.New("this email already exsits")
 	}
 	password := utils.HashPassword(*user.Password)
 	user.Password = &password
@@ -47,72 +47,56 @@ func (r *UserRepositoryImpl) Create(user *models.User) error {
 	user.ID = primitive.NewObjectID()
 	user.User_id = user.ID.Hex()
 
-	token, err := utils.CreateToken(user)
-	if err != nil {
-		return errors.New("token was not created")
-	}
-	user.Token = &token
-
 	_, err = r.collection.InsertOne(ctx, user)
 	if err != nil {
-		return errors.New("User was not created")
+		return nil, errors.New("user could not be created")
 	}
 
-	return nil
+	return user, nil
 }
 
-func (r *UserRepositoryImpl) Login(user *models.User) error {
+func (r *UserRepositoryImpl) Login(user *models.User) (*models.User, error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	var foundUser models.User
 
 	err := r.collection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser)
 	defer cancel()
 	if err != nil {
-		return errors.New("user not found, login seems to be incorrect")
+		return nil, errors.New("user not found, login seems to be incorrect")
 	}
 	if !(utils.VerifyPassword(*user.Password, *foundUser.Password)) {
-		return errors.New("email or password incorrect")
+		return nil, errors.New("email or password incorrect")
 	}
 	if !foundUser.Deleted_at.Equal(time.Time{}) {
-		return errors.New("User not found")
+		return nil, errors.New("User not found")
 	}
-
-	token, err := utils.CreateToken(user)
-	if err != nil {
-		return errors.New("token was not created")
-	}
-
-	user.Token = &token
-	user.Last_login_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 
 	filter := bson.M{"email": user.Email}
+	user.Last_login_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 
 	var updateObj primitive.D
-	updateObj = append(updateObj, bson.E{Key: "token", Value: user.Token})
 	updateObj = append(updateObj, bson.E{Key: "last_login_at", Value: user.Last_login_at})
 
 	_, insertErr := r.collection.UpdateOne(ctx, filter, bson.D{{Key: "$set", Value: updateObj}})
 	if insertErr != nil {
-		return errors.New("login error")
+		return nil, errors.New("Login failed")
 	}
 	defer cancel()
 
-	return nil
+	return user, nil
 }
-func (r *UserRepositoryImpl) Logout(token *string) error {
+func (r *UserRepositoryImpl) Logout(email string) error {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	var foundUser *models.User
 
-	err := r.collection.FindOne(ctx, bson.M{"token": *token}).Decode(&foundUser)
+	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&foundUser)
 	defer cancel()
 	if err != nil {
-		return errors.New("invalid credentials")
+		return errors.New("User not found")
 	}
 	if !foundUser.Deleted_at.Equal(time.Time{}) {
 		return errors.New("User not found")
 	}
-
-	newToken, _ := utils.InvalidateToken(*token)
 
 	filter := bson.M{"email": *foundUser.Email}
 
@@ -120,25 +104,24 @@ func (r *UserRepositoryImpl) Logout(token *string) error {
 	*&foundUser.Logout_at, _ = time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
 
 	updateObj = append(updateObj, bson.E{Key: "logout_at", Value: *&foundUser.Logout_at})
-	updateObj = append(updateObj, bson.E{Key: "token", Value: newToken})
 
-	_, insertErr := r.collection.UpdateOne(ctx, filter, bson.D{{Key: "$set", Value: updateObj}})
-	if insertErr != nil {
-		return errors.New("cannot logout")
+	_, logoutErr := r.collection.UpdateOne(ctx, filter, bson.D{{Key: "$set", Value: updateObj}})
+	if logoutErr != nil {
+		return errors.New("Failed to log out")
 	}
 	defer cancel()
 
 	return nil
 }
 
-func (r *UserRepositoryImpl) Delete(token *string) error {
+func (r *UserRepositoryImpl) Delete(email string) error {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	var foundUser *models.User
 
-	err := r.collection.FindOne(ctx, bson.M{"token": *token}).Decode(&foundUser)
+	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&foundUser)
 	defer cancel()
 	if err != nil {
-		return errors.New("invalid credentials")
+		return errors.New("User not found")
 	}
 
 	filter := bson.M{"email": *foundUser.Email}
@@ -154,46 +137,37 @@ func (r *UserRepositoryImpl) Delete(token *string) error {
 
 	_, deleteErr := r.collection.UpdateOne(ctx, filter, bson.D{{Key: "$set", Value: updateObj}})
 	if deleteErr != nil {
-		return errors.New("cannot deleted")
+		return errors.New("user could not be deleted")
 	}
 	defer cancel()
 
 	return nil
 }
 
-func (r *UserRepositoryImpl) GetUser(token *string) (*models.GetResponse, error) {
+func (r *UserRepositoryImpl) GetUser(email string) (*models.GetResponse, error) {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
-	var foundUser *models.User
 	var responseUser *models.GetResponse
 
-	err := r.collection.FindOne(ctx, bson.M{"token": *token}).Decode(&foundUser)
+	err := r.collection.FindOne(ctx, bson.M{"email": email}).Decode(&responseUser)
 	defer cancel()
 	if err != nil {
-		return responseUser, errors.New("invalid credentials")
+		return responseUser, errors.New("User not found")
 	}
-
-	filter := bson.M{"token": *foundUser.Token}
-
-	insertErr := r.collection.FindOne(ctx, filter).Decode(&responseUser)
-	if insertErr != nil {
-		return responseUser, errors.New("something went wrong")
-	}
-	defer cancel()
 
 	return responseUser, nil
 }
 
-func (r *UserRepositoryImpl) Update(user *models.User, token *string) error {
+func (r *UserRepositoryImpl) Update(user *models.User) error {
 	var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 	var foundUser *models.User
 
-	err := r.collection.FindOne(ctx, bson.M{"token": *token}).Decode(&foundUser)
+	err := r.collection.FindOne(ctx, bson.M{"email": user.Email}).Decode(&foundUser)
 	defer cancel()
 	if err != nil {
-		return errors.New("invalid credentials")
+		return errors.New("User not found")
 	}
 
-	filter := bson.M{"token": *foundUser.Token}
+	filter := bson.M{"email": user.Email}
 	var updateObj primitive.D
 
 	if user.First_name != nil {
@@ -209,7 +183,7 @@ func (r *UserRepositoryImpl) Update(user *models.User, token *string) error {
 	if user.Email != nil {
 		err := r.collection.FindOne(ctx, bson.M{"email": *user.Email}).Decode(&foundUser)
 		if err == nil {
-			return errors.New("email already taken")
+			return errors.New("this email is already exist")
 		} else {
 			updateObj = append(updateObj, bson.E{Key: "email", Value: *user.Email})
 		}
@@ -224,7 +198,7 @@ func (r *UserRepositoryImpl) Update(user *models.User, token *string) error {
 
 	_, updateErr := r.collection.UpdateOne(ctx, filter, bson.D{{Key: "$set", Value: updateObj}})
 	if updateErr != nil {
-		return errors.New("cannot updated")
+		return errors.New("Failed to update user information")
 	}
 	defer cancel()
 	user = foundUser
