@@ -88,8 +88,9 @@ func Logout(c *fiber.Ctx) error {
 
 func Delete(c *fiber.Ctx) error {
 	userRepository := repositories.NewUserRepository()
+	emialParam := c.Params("email")
 
-	err := userRepository.Delete("")
+	err := userRepository.Delete(emialParam)
 	if err != nil {
 		return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
 	}
@@ -100,8 +101,14 @@ func Delete(c *fiber.Ctx) error {
 func GetUser(c *fiber.Ctx) error {
 	var foundUser *models.GetResponse
 	userRepository := repositories.NewUserRepository()
+	tokenString := c.Cookies("access_token")
 
-	foundUser, err := userRepository.GetUser("")
+	claims, err := utils.VerifyToken(tokenString)
+	if err != nil {
+		return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
+	}
+	userEmail := claims["email"].(string)
+	foundUser, err = userRepository.GetUser(userEmail)
 	if err != nil {
 		return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
 	}
