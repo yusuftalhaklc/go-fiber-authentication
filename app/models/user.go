@@ -15,7 +15,6 @@ type User struct {
 	Email         *string            `json:"email" validate:"email,required"`
 	Phone         *string            `json:"phone" validate:"required"`
 	Avatar        *string            `json:"avatar"`
-	Token         *string            `json:"token"`
 	Created_at    time.Time          `json:"created_at"`
 	Last_login_at time.Time          `json:"last_login_at"`
 	Logout_at     time.Time          `json:"logout_at"`
@@ -24,7 +23,7 @@ type User struct {
 
 type LoginResponse struct {
 	Email *string `json:"email"`
-	Token *string `json:"token"`
+	Token string  `json:"token"`
 }
 
 type GetResponse struct {
