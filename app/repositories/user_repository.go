@@ -40,6 +40,11 @@ func (r *UserRepositoryImpl) Create(user *models.User) (*models.User, error) {
 	if count > 0 {
 		return nil, errors.New("this email already exsits")
 	}
+
+	if models.IsRoleValid(user.UserRole) == false {
+		return nil, errors.New("invalid role")
+	}
+
 	password := utils.HashPassword(*user.Password)
 	user.Password = &password
 
