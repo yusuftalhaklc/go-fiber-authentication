@@ -50,6 +50,12 @@ Go Fiber Authentication API is a RESTful API built using the Fiber web framework
 - **Method:** `GET`
 - **Description:** Get user details.
 
+### Delete User (Admin Only)
+
+- **Endpoint:** `/api/user/delete/:email`
+- **Method:** `DELETE`
+- **Description:** Deletes user.
+
 ## Request Body and Response Examples
 
 ### Signup
@@ -60,23 +66,30 @@ Go Fiber Authentication API is a RESTful API built using the Fiber web framework
     "last_name":"User Last Name",
     "password":"password",
     "email":"username@example.com",
-    "phone":"5555555555"
+    "phone":"5555555555",
+    "user_role": {
+        "role_desc":"admin",
+        "role_id": 4001
+    }
 }
 ```
 - Response
 ```json
 {
     "data": {
-        "ID": "649c8813a9299b295118e33c",
-        "user_id": "649c8813a9299b295118e33c",
+        "ID": "64a55bbe2d689534b97fccef",
+        "user_id": "64a55bbe2d689534b97fccef",
         "first_name": "User First Name",
         "last_name": "User Last Name",
         "password": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
         "email": "username@example.com",
         "phone": "5555555555",
+        "user_role": {
+            "role_desc": "admin",
+            "role_id": 4001
+        },
         "avatar": null,
-        "token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2ODc5ODE4NTEsImlkIjoiNjQ5Yzg4MTNhOTI5OWIyOTUxMThlMzNjIiwibWFpbCI6InVzZXJuYW1lQGV4YW1wbGUuY29tIn0._WnQuFPkJBr3s49EpU8BJo6ndVizOmz1OM5hp9uzh2Jz-NhOvcEByZK9EYJKoNRNBoJN2uKtPn1MyIdB-Nus-w",
-        "created_at": "2023-06-28T22:20:51+03:00",
+        "created_at": "2023-07-05T15:02:06+03:00",
         "last_login_at": "0001-01-01T00:00:00Z",
         "logout_at": "0001-01-01T00:00:00Z",
         "deleted_at": "0001-01-01T00:00:00Z"
@@ -109,7 +122,7 @@ Go Fiber Authentication API is a RESTful API built using the Fiber web framework
 
 ### Logout
 - Request <br>
-Authorization = token
+ Using Cookie
 ```http
 POST /api/user/Logout
 ```
@@ -124,7 +137,7 @@ POST /api/user/Logout
 
 ### Get user
 - Request <br>
-Authorization = token
+ Using Cookie
 ```http
 GET /api/user/
 ```
@@ -138,12 +151,31 @@ GET /api/user/
         "password": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
         "email": "username@example.com",
         "phone": "5555555555",
+        "user_role": {
+            "role_desc": "admin",
+            "role_id": 4001
+        },
         "avatar": null,
-        "created_at": "2023-06-28T19:20:51Z",
-        "last_login_at": "2023-06-28T19:38:27Z",
-        "logout_at": "2023-06-28T19:38:19Z"
+        "created_at": "2023-07-05T12:02:06Z",
+        "last_login_at": "0001-01-01T00:00:00Z",
+        "logout_at": "0001-01-01T00:00:00Z"
     },
     "message": "Successfully found",
+    "status": "success"
+}
+```
+
+### Delete User (Admin Only)
+- Request <br>
+ Using Cookie
+```http
+DELETE /api/user/delete/user@example.com
+```
+
+- Response
+```json
+{
+    "message": "Successfully deleted",
     "status": "success"
 }
 ```
