@@ -62,8 +62,9 @@ func IsAdminValid(role Role) bool {
 
 // LoginResponse represents the response returned after successful login.
 type LoginResponse struct {
-	Email *string `json:"email"`
-	Token string  `json:"token"`
+	Email     *string `json:"email"`
+	Token     string  `json:"token"`
+	TokenType string  `json:"token_type"`
 }
 
 // GetResponse represents the response returned when getting user data.

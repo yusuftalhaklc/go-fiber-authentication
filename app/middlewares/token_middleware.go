@@ -13,15 +13,19 @@ import (
 // Otherwise, it allows the request to proceed.
 func TokenMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		// Retrieve the access token from the cookie
-		tokenString := c.Cookies("access_token")
+		// Get the JWT token from the Authorization header
+		authHeader := c.Get("Authorization")
+		if authHeader == "" || len(authHeader) < 7 {
+			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"status": "error", "message": "invalid token"})
+		}
+		tokenString := authHeader[7:] // Remove the "Bearer " prefix
 
 		// Verify the token
-		_, err := utils.VerifyToken(tokenString)
+		claims, err := utils.VerifyToken(tokenString)
 		if err != nil {
 			return c.Status(http.StatusUnauthorized).JSON(fiber.Map{"status": "error", "message": err.Error()})
 		}
-
+		c.Locals("claims", claims)
 		// Allow the request to proceed
 		return c.Next()
 	}

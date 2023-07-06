@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/yusuftalhaklc/go-fiber-authentication/app/models"
 	"github.com/yusuftalhaklc/go-fiber-authentication/app/repositories"
@@ -57,16 +58,8 @@ func Login(c *fiber.Ctx) error {
 		return errors.New("token was not created")
 	}
 
-	// Set the token as a cookie in the response
-	cookie := &fiber.Cookie{
-		Name:     "access_token",
-		Value:    token,
-		HTTPOnly: true,
-	}
-	c.Cookie(cookie)
-
 	// Return a success response with the user's email and token
-	loginResponse := models.LoginResponse{Email: user.Email, Token: token}
+	loginResponse := models.LoginResponse{Email: user.Email, Token: token, TokenType: "bearer"}
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Successfully logged in", "data": loginResponse})
 }
 
@@ -77,35 +70,14 @@ func Login(c *fiber.Ctx) error {
 func Logout(c *fiber.Ctx) error {
 	// Get the user's token from the cookie
 	userRepository := repositories.NewUserRepository()
-	tokenString := c.Cookies("access_token")
-
-	// Verify the token and retrieve the claims
-	claims, err := utils.VerifyToken(tokenString)
-	if err != nil {
-		return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
-	}
-
-	// Invalidate the token
-	invalidToken, err := utils.InvalidateToken(tokenString)
-	if err != nil {
-		return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
-	}
-
-	// Set the invalidated token as a cookie in the response
-	cookie := &fiber.Cookie{
-		Name:     "access_token",
-		Value:    invalidToken,
-		HTTPOnly: true,
-	}
-	c.Cookie(cookie)
-
-	// Retrieve the user's email from the claims and log out the user in the repository
+	claims := c.Locals("claims").(jwt.MapClaims)
+	// Retrieve the user from the repository based on the user's email
 	userEmail := claims["email"].(string)
-	err = userRepository.Logout(userEmail)
+	// Retrieve the user's email from the claims and log out the user in the repository
+	err := userRepository.Logout(userEmail)
 	if err != nil {
 		return c.Status(http.StatusNotFound).JSON(fiber.Map{"status": "error", "message": err.Error()})
 	}
-
 	// Return a success response
 	return c.Status(200).JSON(fiber.Map{"status": "success", "message": "Successfully logged out"})
 }
@@ -137,18 +109,10 @@ func GetUser(c *fiber.Ctx) error {
 	var foundUser *models.GetResponse
 	userRepository := repositories.NewUserRepository()
 
-	// Get the user's token from the cookie
-	tokenString := c.Cookies("access_token")
-
-	// Verify the token and retrieve the claims
-	claims, err := utils.VerifyToken(tokenString)
-	if err != nil {
-		return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
-	}
-
+	claims := c.Locals("claims").(jwt.MapClaims)
 	// Retrieve the user from the repository based on the user's email
 	userEmail := claims["email"].(string)
-	foundUser, err = userRepository.GetUser(userEmail)
+	foundUser, err := userRepository.GetUser(userEmail)
 	if err != nil {
 		return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
 	}

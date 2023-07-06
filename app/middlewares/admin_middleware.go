@@ -3,10 +3,10 @@ package middleware
 import (
 	"net/http"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/yusuftalhaklc/go-fiber-authentication/app/models"
 	"github.com/yusuftalhaklc/go-fiber-authentication/app/repositories"
-	"github.com/yusuftalhaklc/go-fiber-authentication/app/utils"
 )
 
 // AdminMiddleware is a middleware function that is used to authenticate and authorize an admin user.
@@ -18,17 +18,11 @@ func AdminMiddleware() fiber.Handler {
 		// Retrieve the user data from the repository based on the access token
 		var foundUser *models.GetResponse
 		userRepository := repositories.NewUserRepository()
-		tokenString := c.Cookies("access_token")
-
-		// Verify the token and retrieve the claims
-		claims, err := utils.VerifyToken(tokenString)
-		if err != nil {
-			return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
-		}
-
+		// Get the JWT token from the Authorization header
+		claims := c.Locals("claims").(jwt.MapClaims)
 		// Retrieve the user from the repository based on the user's email
 		userEmail := claims["email"].(string)
-		foundUser, err = userRepository.GetUser(userEmail)
+		foundUser, err := userRepository.GetUser(userEmail)
 		if err != nil {
 			return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
 		}
