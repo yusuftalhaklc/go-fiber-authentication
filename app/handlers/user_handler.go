@@ -103,7 +103,7 @@ func Logout(c *fiber.Ctx) error {
 	userEmail := claims["email"].(string)
 	err = userRepository.Logout(userEmail)
 	if err != nil {
-		return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{"status": "error", "message": err.Error()})
 	}
 
 	// Return a success response
@@ -121,7 +121,7 @@ func Delete(c *fiber.Ctx) error {
 	// Delete the user from the repository
 	err := userRepository.Delete(emailParam)
 	if err != nil {
-		return c.Status(http.StatusForbidden).JSON(fiber.Map{"status": "error", "message": err.Error()})
+		return c.Status(http.StatusNotFound).JSON(fiber.Map{"status": "error", "message": err.Error()})
 	}
 
 	// Return a success response
