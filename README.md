@@ -131,7 +131,7 @@ COOKIE_ENC_KEY="secret-thirty-2-character-string"
 
 ### Logout
 - Request <br>
- Using Cookie
+ Authorization: Bearer <access_token>
 ```http
 POST /api/user/Logout
 ```
@@ -146,7 +146,7 @@ POST /api/user/Logout
 
 ### Get user
 - Request <br>
- Using Cookie
+ Authorization: Bearer <access_token>
 ```http
 GET /api/user/
 ```
@@ -176,7 +176,7 @@ GET /api/user/
 
 ### Delete User (Admin Only)
 - Request <br>
- Using Cookie
+ Authorization: Bearer <access_token>
 ```http
 DELETE /api/user/delete/user@example.com
 ```
