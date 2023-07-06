@@ -2,8 +2,17 @@
 
 Go Fiber Authentication API is a RESTful API built using the Fiber web framework.
 
-## Installation
 
+## Installation
+#### First you have to set the .env file
+The .env file must be in the main folder
+```env
+DB_URI="your-mongodb-atlas-uri"
+DB_NAME="database-name"
+DB_COLLECTION="collection-name"
+SECRET_KEY="your-256-bit-secret"
+COOKIE_ENC_KEY="secret-thirty-2-character-string"
+```
 1. Clone the repository:
   ```shell
   git clone https://github.com/yusuftalhaklc/go-fiber-authentication.git
