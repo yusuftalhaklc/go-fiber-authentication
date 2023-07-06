@@ -58,7 +58,6 @@ func VerifyToken(tokenString string) (jwt.MapClaims, error) {
 	}
 	expirationTime := time.Unix(int64(claims["exp"].(float64)), 0)
 	currentTime := time.Now()
-	fmt.Println("exp : ", expirationTime, "\n", "current : ", currentTime)
 	if currentTime.After(expirationTime) {
 		return nil, errors.New("Invalid token")
 	}
